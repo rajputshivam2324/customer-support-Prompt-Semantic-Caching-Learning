@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: support-gateway-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: support-gateway-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: support-gateway-cache
+          type: keyvalue
+          property: connectionString
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_OPERATOR_PASSWORD
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: EMBEDDING_MODEL
+        value: gemini-embedding-001
+  - type: keyvalue
+    name: support-gateway-cache
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+databases:
+  - name: support-gateway-db
+    databaseName: support
+    user: support

@@ -1,0 +1,10 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.34,<1
+sqlalchemy>=2.0,<3
+psycopg[binary]>=3.2,<4
+redis>=5,<7
+langgraph>=0.6,<2
+langchain-core>=0.3,<2
+langchain-google-genai>=2.1,<5
+pydantic-settings>=2.7,<3
+pgvector>=0.4,<1
