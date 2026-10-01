@@ -2,8 +2,8 @@ from sqlalchemy.orm import Session
 
 from .auth import hash_password, verify_password
 from .config import Settings
-from .models import Customer, Invoice, KnowledgeDoc, Operator, Tenant
-from sqlalchemy import select
+from .models import AuthSession, Customer, Invoice, KnowledgeDoc, Operator, Tenant
+from sqlalchemy import delete, select
 
 
 TENANTS = [
@@ -26,7 +26,7 @@ DOCS = [
 
 
 def seed(db: Session, settings: Settings | None = None) -> None:
-    for slug, name, plan, region in TENANTS:
+    for slug, name, plan, region in (TENANTS[:1] if settings and settings.demo_mode else TENANTS):
         if db.get(Tenant, slug):
             continue
         db.add(Tenant(id=slug, name=name))
@@ -40,9 +40,11 @@ def seed(db: Session, settings: Settings | None = None) -> None:
             db.add(KnowledgeDoc(id=doc_id, title=title, content=content))
     if settings and settings.demo_mode:
         db.flush()
-        operator = db.scalar(select(Operator).where(Operator.tenant_id == "demo", Operator.email == settings.demo_operator_email))
+        email = settings.demo_operator_email.strip().lower()
+        operator = db.scalar(select(Operator).where(Operator.tenant_id == "demo", Operator.email == email))
         if not operator:
-            db.add(Operator(tenant_id="demo", email=settings.demo_operator_email, name="Demo Agent", role="admin", password_hash=hash_password(settings.demo_operator_password)))
+            db.add(Operator(tenant_id="demo", email=email, name="Demo Agent", role="admin", password_hash=hash_password(settings.demo_operator_password)))
         elif not verify_password(settings.demo_operator_password, operator.password_hash):
             operator.password_hash = hash_password(settings.demo_operator_password)
+            db.execute(delete(AuthSession).where(AuthSession.operator_id == operator.id))
     db.commit()

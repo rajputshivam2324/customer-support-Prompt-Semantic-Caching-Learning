@@ -47,3 +47,7 @@ def test_operator_auth_and_conversation_ownership(monkeypatch, tmp_path):
 
         main.logout(user, db, f"Bearer {token}")
         assert operator_for_token(db, token) is None
+        rotated_token = main.login(main.LoginRequest(email="demo@relay.example", password="test-password"), db)["token"]
+        seed(db, main.settings.model_copy(update={"demo_operator_password": "rotated-password"}))
+        assert operator_for_token(db, rotated_token) is None
+        assert main.login(main.LoginRequest(email="demo@relay.example", password="rotated-password"), db)["user"]["id"] == user.id

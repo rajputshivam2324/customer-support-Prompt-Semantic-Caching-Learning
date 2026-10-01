@@ -98,7 +98,7 @@ def health():
 
 @app.post("/v1/auth/login")
 def login(body: LoginRequest, db: DB):
-    operator = db.scalar(select(Operator).where(Operator.email == body.email.strip().lower()))
+    operator = db.scalar(select(Operator).where(Operator.tenant_id == "demo", Operator.email == body.email.strip().lower()))
     if not operator or not verify_password(body.password, operator.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = issue_session(db, operator)
